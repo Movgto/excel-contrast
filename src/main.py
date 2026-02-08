@@ -1,6 +1,8 @@
 import tkinter as tk
-from functions import select_file
+from tkinter import Entry
+from functions import select_file, check_diferences
 from components.sheet_validation_comp import sheet_validation_comp
+from observer import Signal
 
 window = tk.Tk()
 
@@ -26,6 +28,28 @@ validate_sheets_btn.pack()
 sheet_val_cont = tk.Frame(window)
 sheet_val_cont.pack()
 
-sheet_validation_comp(sheet_val_cont, filepath1=route_a, filepath2=route_b, validate_btn=validate_sheets_btn)
+sheets_dict_obs = Signal[dict[str, Entry]]({})
+
+sheet_validation_comp(sheet_val_cont, filepath1=route_a, filepath2=route_b, validate_btn=validate_sheets_btn, sheets_obs=sheets_dict_obs)
+
+compare_btn = tk.Button(window, text='Comparar archivos', state='disabled')
+
+def on_compare_btn_click():
+    result = check_diferences(route_a.get(), route_b.get(), sheets_dict_obs.get())
+
+    print('Comparison result:')
+    print(result)
+
+compare_btn.bind('<Button-1>', lambda e: on_compare_btn_click())
+compare_btn.pack(pady=10)
+
+file1button.bind('<Button-1>', lambda e: compare_btn.config(state='disabled'))
+file2button.bind('<Button-1>', lambda e: compare_btn.config(state='disabled'))
+
+def update_compare_btn():
+    if len(sheets_dict_obs.get()) > 0:
+        compare_btn.config(state='active')
+
+sheets_dict_obs.subscribe(update_compare_btn)
 
 window.mainloop()
