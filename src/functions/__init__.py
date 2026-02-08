@@ -1,6 +1,7 @@
 from tkinter import filedialog, StringVar, Label, Entry
 import pandas as pd
 from pandas import DataFrame
+from observer import Signal
 
 def select_file(routevar: StringVar, label: Label):
     route = filedialog.askopenfile(
@@ -15,34 +16,44 @@ def select_file(routevar: StringVar, label: Label):
         
     return route
 
-def check_diferences(filepath1: str, filepath2: str, col_id_dict: dict[str, Entry]):
-    f1 = pd.read_excel(filepath1, sheet_name=None)
-    f2 = pd.read_excel(filepath2, sheet_name=None)
+def check_diferences(filepath1: str, filepath2: str, col_id_dict: dict[str, Entry], prog_bar_obs: Signal[float]):
+    f1 = pd.read_excel(filepath1, sheet_name=None)    
+    prog_bar_obs.set(10)
+    
+    f2 = pd.read_excel(filepath2, sheet_name=None)    
+    prog_bar_obs.set(20)
     
     result: dict[str, DataFrame] = {}
+    
+    segment = 40/len(col_id_dict)
 
     for sheet_name in col_id_dict.keys():
-        sheet_a = f1[sheet_name]
-        sheet_b = f2[sheet_name]
+        sa = f1[sheet_name]
+        sb = f2[sheet_name]
 
         col_id = col_id_dict[sheet_name].get()
+        
         if col_id != "":
-            sa = sheet_a.set_index(col_id)
-            sb = sheet_b.set_index(col_id)
+            sa = sa.set_index(col_id)
+            sb = sb.set_index(col_id)
 
-            all_indexes = sa.index.union(sb.index)
-            all_col = sa.columns.union(sb.columns)
+        all_indexes = sa.index.union(sb.index)
+        all_col = sa.columns.union(sb.columns)
 
-            sa_fill_blank = sa.reindex(index=all_indexes, columns=all_col)
-            sa_fill_blank = sb.reindex(index=all_indexes, columns=all_col)
+        sa_fill_blank = sa.reindex(index=all_indexes, columns=all_col)
+        sb_fill_blank = sb.reindex(index=all_indexes, columns=all_col)
+        
+        print('Sheet A:')
+        print(sa_fill_blank.to_string())
+        
+        print('Sheet B:')
+        print(sb_fill_blank.to_string())                
 
-            differences = sa_fill_blank.compare(sa_fill_blank)
+        differences = sa_fill_blank.compare(sb_fill_blank)
 
-            result[sheet_name] = differences
-        else:
-            differences = sheet_a.compare(sheet_b)
-
-            result[sheet_name] = differences
+        result[sheet_name] = differences
+        
+        prog_bar_obs.set(prog_bar_obs.get() + segment)
     
     return result
 

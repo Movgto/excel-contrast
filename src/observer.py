@@ -1,13 +1,14 @@
-from typing import Callable
+from typing import Callable, Any
 
 class Subscription:
-    _cb: Callable        
+    _cb: Callable
+    _obs: Any = None
 
     def __init__(self, cb: Callable):
         self._cb = cb
     
     def run(self):
-        self._cb()
+        self._cb(self._obs.get())
 
 class Signal[T]:
     _value: T
@@ -20,8 +21,9 @@ class Signal[T]:
         for sub in self._subscriptions:
             sub.run()
     
-    def subscribe(self, cb: Callable):
+    def subscribe(self, cb: Callable[[T], Any]):
         subs = Subscription(cb)
+        subs._obs = self
         self._subscriptions.append(subs)
 
         return subs
