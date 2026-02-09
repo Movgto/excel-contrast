@@ -5,6 +5,7 @@ from components.sheet_validation_comp import sheet_validation_comp
 from components.popup_comp import popup_comp
 from observer import Signal
 import os
+import sys
 
 window = tk.Tk()
 
@@ -69,9 +70,14 @@ def on_compare_btn_click():
         cleanup()
         popup_comp(window, 'No se encontraron diferencias en los archivos', 'No hay diferencias!')
         return
-        
     
-    current_dir = os.path.dirname(__file__)
+    current_dir = ''
+
+    if getattr(sys, 'frozen', False):
+        current_dir = os.path.dirname(sys.executable)
+    else:
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+    
     
     dir = os.path.join(current_dir, 'results')
     
