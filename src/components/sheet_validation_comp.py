@@ -2,7 +2,7 @@ from tkinter import StringVar, Button, Frame, Label, Entry
 from observer import Signal
 from functions import validate_sheets
 
-def sheet_validation_comp(container: Frame, filepath1: StringVar, filepath2: StringVar, validate_btn: Button, sheets_obs: Signal[dict[str, Entry]]):
+def sheet_validation_comp(container: Frame, filepath1: StringVar, filepath2: StringVar, validate_btn: Button, sheets_obs: Signal[dict[str, Entry]], sheet_mapping_obs: Signal[dict]|None = None):
     
     def on_button_clicked(event):
         for widget in container.winfo_children():
@@ -12,7 +12,11 @@ def sheet_validation_comp(container: Frame, filepath1: StringVar, filepath2: Str
             Label(container, text='No se encontraron hojas en común para comparar.').pack(pady=5)
             return
         
-        (matches, diff1, diff2) = validate_sheets(filepath1=filepath1.get(), filepath2=filepath2.get())
+        (matches, diff1, diff2, sheet_mapping) = validate_sheets(filepath1=filepath1.get(), filepath2=filepath2.get())
+        
+        # Guardar el mapeo en el Signal si está disponible
+        if sheet_mapping_obs:
+            sheet_mapping_obs.set(sheet_mapping)
         
         if (len(matches) > 0):
             Label(container, text='Estas son las hojas en común de ambos archivos. Indique cual es la columna de valores únicos si la hay, o deje el campo en blanco.',
